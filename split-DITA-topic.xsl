@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/"
-    exclude-result-prefixes="ditaarch"
+    exclude-result-prefixes="#all"
     version="2.0">
+    
+    <xsl:output indent="yes"/>
     
     <xsl:template match="/dita/topic">
         <!-- Split subtopics of large topic to new topic files. -->
@@ -14,10 +16,11 @@
         <xsl:variable name="mapFileName" 
             select="concat('DITAMAP-', substring-before(tokenize(document-uri(/), '/')[last()], '.'), '.ditamap')"/>
         <xsl:message>DITAMAP file: <xsl:value-of select="normalize-space($mapFileName)"/></xsl:message>
-        <xsl:result-document href="{normalize-space($mapFileName)}"
+        <xsl:result-document href="{normalize-space($mapFileName)}" indent="yes"
             doctype-public="-//OASIS//DTD DITA Map//EN"
             doctype-system="map.dtd">
-            <map title="{normalize-space(title)}">
+            <map>
+                <title><xsl:value-of select="title"/></title>
                 <xsl:apply-templates select="*" mode="map"/>
             </map>
         </xsl:result-document>
@@ -34,12 +37,6 @@
         <xsl:attribute name="platform" select="string-join(tokenize(., ';'), ' ')"/>
     </xsl:template>
     
-    <xsl:template match="indexterm" mode="split">
-        <p outputclass="db.indexterm">
-            <xsl:copy-of select="."/>
-        </p>
-    </xsl:template>
-    
   <!-- EXM-16853 -->
     <xsl:template match="link" mode="split">
         <xsl:apply-templates select="*"/>
@@ -49,7 +46,7 @@
                                      @domains | 
                                      @class | 
                                      @outputclass"
-                                     mode="split"/>
+                                     mode="split map"/>
 
     <xsl:template match="xref[not(@scope)]" mode="split">
         <xsl:copy>
@@ -80,28 +77,21 @@
         <xsl:variable name="splitFileNameWithExt" select="concat($splitFileName, '.xml')"/>
         <xsl:result-document href="{$splitFileNameWithExt}" 
             doctype-public="-//OASIS//DTD DITA Topic//EN" 
-            doctype-system="topic.dtd">
-                <topic xsl:exclude-result-prefixes="ditaarch">
-                    <xsl:apply-templates select="@* | node()" mode="split"/>
-                </topic>
+            doctype-system="topic.dtd" indent="yes" exclude-result-prefixes="#all">
+            <xsl:copy>
+                <xsl:apply-templates select="@* | node()" mode="split"/>
+            </xsl:copy>
         </xsl:result-document>
     </xsl:template>
     
     
-    <xsl:template match="*" mode="map">
-        <xsl:apply-templates select="*" mode="map"/>
+    <xsl:template match="node()" mode="map">
+        <xsl:apply-templates select="node()" mode="map"/>
     </xsl:template>
     
     
     <xsl:template match="topic" mode="map">
-        <xsl:variable name="topicTitle">
-            <xsl:choose>
-                <xsl:when test="title/ph"><xsl:value-of select="title/ph[1]"/></xsl:when>
-                <xsl:otherwise><xsl:value-of select="title"/></xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
-        
-        <topicref href="{@id}.xml" navtitle="{normalize-space($topicTitle)}">
+        <topicref href="{@id}.xml">
             <xsl:if test="@platform">
                 <xsl:attribute name="platform" select="string-join(tokenize(@platform, ';'), ' ')"/>
             </xsl:if>
