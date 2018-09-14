@@ -12,7 +12,7 @@
         
         <!-- Build DITA map with all topics. -->
         <xsl:variable name="mapFileName" 
-            select="replace(concat('DITAMAP-', tokenize(document-uri(/), '/')[last()]), '.xml', '.ditamap')"/>
+            select="concat('DITAMAP-', substring-before(tokenize(document-uri(/), '/')[last()], '.'), '.ditamap')"/>
         <xsl:message>DITAMAP file: <xsl:value-of select="normalize-space($mapFileName)"/></xsl:message>
         <xsl:result-document href="{normalize-space($mapFileName)}"
             doctype-public="-//OASIS//DTD DITA Map//EN"
