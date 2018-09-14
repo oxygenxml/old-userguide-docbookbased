@@ -16,7 +16,7 @@
         <xsl:message>DITAMAP file: <xsl:value-of select="normalize-space($mapFileName)"/></xsl:message>
         <xsl:result-document href="{normalize-space($mapFileName)}"
             doctype-public="-//OASIS//DTD DITA Map//EN"
-            doctype-system="http://docs.oasis-open.org/dita/v1.1/OS/dtd/map.dtd">
+            doctype-system="map.dtd">
             <map title="{normalize-space(title)}">
                 <xsl:apply-templates select="*" mode="map"/>
             </map>
@@ -80,7 +80,7 @@
         <xsl:variable name="splitFileNameWithExt" select="concat($splitFileName, '.xml')"/>
         <xsl:result-document href="{$splitFileNameWithExt}" 
             doctype-public="-//OASIS//DTD DITA Topic//EN" 
-            doctype-system="http://docs.oasis-open.org/dita/v1.1/OS/dtd/topic.dtd">
+            doctype-system="topic.dtd">
                 <topic xsl:exclude-result-prefixes="ditaarch">
                     <xsl:apply-templates select="@* | node()" mode="split"/>
                 </topic>
