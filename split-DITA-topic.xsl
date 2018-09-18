@@ -60,7 +60,7 @@
     </xsl:template>
     
 
-    <xsl:template match="topic" mode="split">
+    <xsl:template match="topic|task|concept|reference" mode="split">
         <xsl:variable name="splitFileName">
             <xsl:choose>
                 <xsl:when test="@id">
@@ -90,7 +90,7 @@
     </xsl:template>
     
     
-    <xsl:template match="topic" mode="map">
+    <xsl:template match="topic|task|concept|reference" mode="map">
         <topicref href="{@id}.xml">
             <xsl:if test="@platform">
                 <xsl:attribute name="platform" select="string-join(tokenize(@platform, ';'), ' ')"/>
