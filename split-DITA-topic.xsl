@@ -75,9 +75,17 @@
         <xsl:message>TOPIC file: <xsl:value-of select="normalize-space($splitFileName)"/></xsl:message>
         
         <xsl:variable name="splitFileNameWithExt" select="concat($splitFileName, '.xml')"/>
+        <xsl:variable name="topicName">
+            <xsl:choose>
+                <xsl:when test="local-name() = 'task'">Task</xsl:when>
+                <xsl:when test="local-name() = 'Concept'">Concept</xsl:when>
+                <xsl:when test="local-name() = 'Reference'">Reference</xsl:when>
+                <xsl:otherwise>Topic</xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         <xsl:result-document href="{$splitFileNameWithExt}" 
-            doctype-public="-//OASIS//DTD DITA Topic//EN" 
-            doctype-system="topic.dtd" indent="yes" exclude-result-prefixes="#all">
+            doctype-public="-//OASIS//DTD DITA {$topicName}//EN" 
+            doctype-system="{lower-case($topicName)}.dtd" indent="yes" exclude-result-prefixes="#all">
             <xsl:copy>
                 <xsl:apply-templates select="@* | node()" mode="split"/>
             </xsl:copy>
