@@ -2,6 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/"
     exclude-result-prefixes="#all"
+    xmlns:oxy="http://www.oxygenxml.com/ns"
     version="2.0">
     
     <xsl:output indent="yes"/>
@@ -48,9 +49,27 @@
                                      @outputclass"
                                      mode="split map"/>
 
-    <xsl:template match="xref[not(@scope)]" mode="split">
+    <xsl:template match="xref | link" mode="split">
         <xsl:copy>
             <xsl:apply-templates select="@*" mode="split"/>
+            <!-- Now fix up the @href -->
+            <xsl:if test="starts-with(@href, '#')">
+                <xsl:variable name="hrefValue" select="@href"/>
+                <xsl:variable name="targetElement" select="(//*[@id = substring-after($hrefValue, '#')])[1]"/>
+                <xsl:if test="$targetElement">
+                    <xsl:variable name="closestTargetTopic" select="$targetElement/(ancestor-or-self::*[local-name() = ('topic', 'task', 'concept', 'reference')])[last()]"/>
+                    <xsl:if test="$closestTargetTopic">
+                        <xsl:choose>
+                            <xsl:when test="$closestTargetTopic = $targetElement">
+                                <xsl:attribute name="href" select="oxy:getTopicFileName($closestTargetTopic)"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:attribute name="href" select="concat(oxy:getTopicFileName($closestTargetTopic), '#', normalize-space($closestTargetTopic/@id)), '/', normalize-space($targetElement/@id)"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:if>
+                </xsl:if>
+            </xsl:if>
             <xsl:if test="starts-with(@href, 'http')">
                 <xsl:attribute name="scope" select="'external'"/>
                 <xsl:attribute name="format" select="'html'"/>
@@ -59,22 +78,29 @@
         </xsl:copy>
     </xsl:template>
     
-
-    <xsl:template match="topic|task|concept|reference" mode="split">
-        <xsl:variable name="splitFileName">
+    <xsl:function name="oxy:getTopicFileName">
+        <xsl:param name="topicElement"/>
+        <xsl:variable name="fileName">
             <xsl:choose>
-                <xsl:when test="@id">
-                    <xsl:value-of select="@id"/>
+                <xsl:when test="$topicElement/@id">
+                    <xsl:value-of select="$topicElement/@id"/>
                 </xsl:when>
                 <xsl:otherwise>
-                    <xsl:value-of select="translate(title, ' ', '_')"/>
+                    <xsl:value-of select="translate($topicElement/title, ' ', '_')"/>
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
+        <xsl:variable name="fileNameWithExt" select="normalize-space(concat($fileName, '.xml'))"/>
+        <xsl:value-of select="$fileNameWithExt"/>
+    </xsl:function>
+    
+
+    <xsl:template match="topic|task|concept|reference" mode="split">
         
-        <xsl:message>TOPIC file: <xsl:value-of select="normalize-space($splitFileName)"/></xsl:message>
+        <xsl:variable name="fileName" select="oxy:getTopicFileName(.)"/>
+        <xsl:message>TOPIC file: <xsl:value-of select="normalize-space($fileName)"/></xsl:message>
         
-        <xsl:variable name="splitFileNameWithExt" select="concat($splitFileName, '.xml')"/>
+        
         <xsl:variable name="topicName">
             <xsl:choose>
                 <xsl:when test="local-name() = 'task'">Task</xsl:when>
@@ -83,7 +109,7 @@
                 <xsl:otherwise>Topic</xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        <xsl:result-document href="{$splitFileNameWithExt}" 
+        <xsl:result-document href="{$fileName}" 
             doctype-public="-//OASIS//DTD DITA {$topicName}//EN" 
             doctype-system="{lower-case($topicName)}.dtd" indent="yes" exclude-result-prefixes="#all">
             <xsl:copy>
