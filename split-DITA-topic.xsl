@@ -18,12 +18,41 @@
             select="concat('DITAMAP-', substring-before(tokenize(document-uri(/), '/')[last()], '.'), '.ditamap')"/>
         <xsl:message>DITAMAP file: <xsl:value-of select="normalize-space($mapFileName)"/></xsl:message>
         <xsl:result-document href="{normalize-space($mapFileName)}" indent="yes"
-            doctype-public="-//OASIS//DTD DITA Map//EN"
-            doctype-system="map.dtd">
-            <map>
-                <title><xsl:value-of select="title"/></title>
+            doctype-public="-//OASIS//DTD DITA BookMap//EN"
+            doctype-system="bookmap.dtd">
+            <bookmap>
+                <xsl:attribute name="id" select="/dita/topic[1]/@id"/>
+                <xsl:attribute name="xml:lang" select="'en-US'"/>
+                <booktitle><xsl:value-of select="title"/></booktitle>
+                <bookmeta>
+                    <xsl:variable name="info" select="/dita/*:info"/>
+                    <author><xsl:value-of select="$info/*:authorgroup/*:author" separator=" "/></author>
+                    <publisherinformation>
+                        <published>
+                            <completed>
+                                <month><xsl:value-of select="substring-before($info/*:pubdate, ' ')"/></month>
+                                <year><xsl:value-of select="substring-after($info/*:pubdate, ' ')"/></year>
+                            </completed>
+                        </published>
+                    </publisherinformation>
+                    <bookid>
+                        <bookpartno><xsl:value-of select="$info/*:biblioid[@class='pubsnumber']"/></bookpartno>
+                         <volume/>
+                    </bookid>
+                    <bookrights>
+                        <copyrfirst>
+                            <year><xsl:value-of select="substring-before($info/*:copyright/*:year, ', ')"/></year>
+                        </copyrfirst>
+                        <copyrlast>
+                            <year><xsl:value-of select="substring-after($info/*:copyright/*:year, ', ')"/></year>
+                        </copyrlast>
+                        <bookowner>
+                            <organization><xsl:value-of select="$info/*:copyright/*:holder"/></organization>
+                        </bookowner>
+                    </bookrights>
+                </bookmeta>
                 <xsl:apply-templates select="*" mode="map"/>
-            </map>
+            </bookmap>
         </xsl:result-document>
     </xsl:template>
     
