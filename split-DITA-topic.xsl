@@ -23,7 +23,7 @@
             <bookmap>
                 <xsl:attribute name="id" select="/dita/topic[1]/@id"/>
                 <xsl:attribute name="xml:lang" select="'en-US'"/>
-                <booktitle><xsl:value-of select="title"/></booktitle>
+                <booktitle><mainbooktitle><xsl:value-of select="title"/></mainbooktitle></booktitle>
                 <bookmeta>
                     <xsl:variable name="info" select="/dita/*:info"/>
                     <author><xsl:value-of select="$info/*:authorgroup/*:author" separator=" "/></author>
@@ -52,7 +52,7 @@
                     </bookrights>
                 </bookmeta>
                 <xsl:apply-templates select="*" mode="map"/>
-            </bookmap>
+            </bookmap>			
         </xsl:result-document>
     </xsl:template>
     
@@ -151,14 +151,69 @@
     <xsl:template match="node()" mode="map">
         <xsl:apply-templates select="node()" mode="map"/>
     </xsl:template>
+	
+	
     
     
     <xsl:template match="topic|task|concept|reference" mode="map">
-        <topicref href="{@id}.xml">
-            <xsl:if test="@platform">
-                <xsl:attribute name="platform" select="string-join(tokenize(@platform, ';'), ' ')"/>
-            </xsl:if>
-            <xsl:apply-templates select="* | text()" mode="map"/>
-        </topicref>
+            <xsl:choose>
+                <xsl:when test="starts-with(@id, 'PREFACE')">
+                    <frontmatter>
+                        <notices />
+                        <preface href="{@id}.xml">
+                            <xsl:apply-templates select="* | text()" mode="map"/>			    
+                        </preface>
+                    </frontmatter>			             
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:variable name="topicrefElementName">
+                        <xsl:choose>
+                            <xsl:when test="count(ancestor::*[local-name() = ('topic', 'task', 'concept', 'reference')]) = 1">
+                                <!-- If this is on the first level, use a <chapter> element to refer to it -->
+                                <xsl:value-of select="'chapter'"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="'topicref'"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+                    
+                    <xsl:element name="{$topicrefElementName}">
+                        <xsl:attribute name="href" select="concat(@id, '.xml')"/>
+                        <xsl:if test="@platform">
+                            <xsl:attribute name="platform" select="string-join(tokenize(@platform, ';'), ' ')"/>
+                        </xsl:if>
+                        <xsl:apply-templates select="* | text()" mode="map"/>
+                    </xsl:element>
+                </xsl:otherwise>
+            </xsl:choose>
+		</xsl:template>
+    
+       <!-- 
+       In all the individual files, in the <image> element change attribute 
+       placement="break"
+        to: scalefit="yes". Without this the image not be displayed 
+        properly
+
+       -->
+		
+		<xsl:template match="@placement[.='break']" mode="split">
+		    <xsl:copy/>
+           <xsl:attribute name="scalefit" select ="'yes'"/>
+        </xsl:template>
+		
+   <!-- 
+   In all the individual files, add rowheader="firstcol" as an attribute to all
+   <table> elements without 
+   which tables are not rendered properly. 
+   -->	
+    <xsl:template match="table"  mode="split">
+		<xsl:copy>
+		    <!-- Copy all existing attributes -->
+		    <xsl:apply-templates select="@*"/>
+            <xsl:attribute name="rowheader" select="'firstcol'"/>
+		    <xsl:apply-templates select="node()"/>
+         </xsl:copy>
     </xsl:template>
+		
 </xsl:stylesheet>
