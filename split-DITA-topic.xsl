@@ -75,7 +75,8 @@
   <xsl:template match="@ditaarch:DITAArchVersion | 
                                      @domains | 
                                      @class | 
-                                     @outputclass"
+                                     @outputclass |
+                                     @rowheader[parent::colspec][.='headers']"
                                      mode="split map"/>
 
     <xsl:template match="xref | link" mode="split">
@@ -152,9 +153,6 @@
         <xsl:apply-templates select="node()" mode="map"/>
     </xsl:template>
 	
-	
-    
-    
     <xsl:template match="topic|task|concept|reference" mode="map">
             <xsl:choose>
                 <xsl:when test="starts-with(@id, 'PREFACE')">
@@ -210,9 +208,9 @@
     <xsl:template match="table"  mode="split">
 		<xsl:copy>
 		    <!-- Copy all existing attributes -->
-		    <xsl:apply-templates select="@*"/>
+		    <xsl:apply-templates select="@*" mode="split"/>
             <xsl:attribute name="rowheader" select="'firstcol'"/>
-		    <xsl:apply-templates select="node()"/>
+		    <xsl:apply-templates select="node()" mode="split"/>
          </xsl:copy>
     </xsl:template>
 		
