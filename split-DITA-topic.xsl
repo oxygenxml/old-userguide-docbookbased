@@ -5,26 +5,15 @@
     xmlns:oxy="http://www.oxygenxml.com/ns"
     version="2.0">
     
-    <xsl:output indent="yes"/>
+    <xsl:output indent="yes" doctype-public="-//OASIS//DTD DITA Map//EN" doctype-system="map.dtd"/>
     
     <xsl:template match="/dita/topic">
-        <!-- Split subtopics of large topic to new topic files. -->
-        <topic>
-            <xsl:apply-templates select="@* | node()" mode="split"/>
-        </topic>
-        
-        <!-- Build DITA map with all topics. -->
-        <xsl:variable name="mapFileName" 
-            select="concat('DITAMAP-', substring-before(tokenize(document-uri(/), '/')[last()], '.'), '.ditamap')"/>
-        <xsl:message>DITAMAP file: <xsl:value-of select="normalize-space($mapFileName)"/></xsl:message>
-        <xsl:result-document href="{normalize-space($mapFileName)}" indent="yes"
-            doctype-public="-//OASIS//DTD DITA Map//EN"
-            doctype-system="map.dtd">
-            <map>
-                <title><xsl:value-of select="title"/></title>
-                <xsl:apply-templates select="*" mode="map"/>
-            </map>
-        </xsl:result-document>
+        <!-- Build DITA map with all topic references. -->
+        <map>
+            <title><xsl:value-of select="title"/></title>
+            <xsl:apply-templates select="*" mode="map"/>
+        </map>
+        <xsl:apply-templates select="topic|task|concept|reference" mode="split"/>
     </xsl:template>
     
     
@@ -99,7 +88,6 @@
         
         <xsl:variable name="fileName" select="oxy:getTopicFileName(.)"/>
         <xsl:message>TOPIC file: <xsl:value-of select="normalize-space($fileName)"/></xsl:message>
-        
         
         <xsl:variable name="topicName">
             <xsl:choose>
